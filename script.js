@@ -21,13 +21,16 @@ let NUM_PARTICLES = parseInt(numParticlesInput.value) || 500;
 let PARTICLE_RADIUS = 2;
 
 // Temperature Settings
-let temperatureCelsius = parseFloat(temperatureInput.value) || 273.15; // Default 273.15°C
+let temperatureCelsius = parseFloat(temperatureInput.value) || -273.15; // Default -273.15°C
 let temperatureKelvin = temperatureCelsius + 273.15;
 
 // Pressure Calculation
 let totalCollisions = 0;
 let pressure = 0;
 const pressureUpdateInterval = 1000; // Update every second
+
+// Velocity Threshold for Collision Counting
+const COLLISION_SPEED_THRESHOLD = 0.5; // Adjust based on simulation needs
 
 // Utility Function to Calculate Distance Between Two Particles
 function getDistance(p1, p2) {
@@ -131,7 +134,7 @@ function initializeParticles() {
         // Calculate standard deviation based on temperature
         // Using (1/2)m*v^2 = (1/2)k*T => v = sqrt(k*T/m)
         // For simulation purposes, set k/m = scaling factor
-        const scalingFactor = 1; // Adjust as needed for visual scaling
+        const scalingFactor = 0.1; // Adjusted for better scaling
         const stdDev = temperatureKelvin > 0 ? Math.sqrt(temperatureKelvin * scalingFactor) : 0;
 
         // Generate velocities based on Maxwell-Boltzmann distribution
@@ -144,6 +147,11 @@ function initializeParticles() {
 
 // Handle Inter-Particle Collisions
 function handleCollisions() {
+    // Skip collision handling at or below absolute zero
+    if (temperatureKelvin <= 0) {
+        return;
+    }
+
     for (let i = 0; i < NUM_PARTICLES; i++) {
         for (let j = i + 1; j < NUM_PARTICLES; j++) {
             const p1 = particles[i];
@@ -153,48 +161,59 @@ function handleCollisions() {
             const dy = p2.y - p1.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < 2 * PARTICLE_RADIUS) {
-                // Calculate angle, sine, and cosine
-                const angle = Math.atan2(dy, dx);
-                const sin = Math.sin(angle);
-                const cos = Math.cos(angle);
+            // Use <= to prevent floating-point precision issues
+            if (distance <= 2 * PARTICLE_RADIUS) {
+                // Calculate relative velocity
+                const dvx = p1.vx - p2.vx;
+                const dvy = p1.vy - p2.vy;
+                const relativeSpeed = Math.sqrt(dvx * dvx + dvy * dvy);
 
-                // Rotate particle positions
-                const x1 = 0;
-                const y1 = 0;
+                // Only handle collision if relative speed exceeds threshold
+                if (relativeSpeed >= COLLISION_SPEED_THRESHOLD) {
+                    // Calculate angle, sine, and cosine
+                    const angle = Math.atan2(dy, dx);
+                    const sin = Math.sin(angle);
+                    const cos = Math.cos(angle);
 
-                const x2 = dx * cos + dy * sin;
-                const y2 = dy * cos - dx * sin;
+                    // Rotate particle positions
+                    const x1 = 0;
+                    const y1 = 0;
 
-                // Rotate velocities
-                const vx1 = p1.vx * cos + p1.vy * sin;
-                const vy1 = p1.vy * cos - p1.vx * sin;
+                    const x2 = dx * cos + dy * sin;
+                    const y2 = dy * cos - dx * sin;
 
-                const vx2 = p2.vx * cos + p2.vy * sin;
-                const vy2 = p2.vy * cos - p2.vx * sin;
+                    // Rotate velocities
+                    const vx1 = p1.vx * cos + p1.vy * sin;
+                    const vy1 = p1.vy * cos - p1.vx * sin;
 
-                // Conservation of momentum in 1D
-                const vx1Final = ((p1.mass - p2.mass) * vx1 + 2 * p2.mass * vx2) / (p1.mass + p2.mass);
-                const vx2Final = ((p2.mass - p1.mass) * vx2 + 2 * p1.mass * vx1) / (p1.mass + p2.mass);
+                    const vx2 = p2.vx * cos + p2.vy * sin;
+                    const vy2 = p2.vy * cos - p2.vx * sin;
 
-                // Update velocities
-                p1.vx = vx1Final * cos - vy1 * sin;
-                p1.vy = vy1 * cos + vx1Final * sin;
-                p2.vx = vx2Final * cos - vy2 * sin;
-                p2.vy = vy2 * cos + vx2Final * sin;
+                    // Conservation of momentum in 1D
+                    const vx1Final = ((p1.mass - p2.mass) * vx1 + 2 * p2.mass * vx2) / (p1.mass + p2.mass);
+                    const vx2Final = ((p2.mass - p1.mass) * vx2 + 2 * p1.mass * vx1) / (p1.mass + p2.mass);
 
-                // Separate overlapping particles
-                const overlap = 2 * PARTICLE_RADIUS - distance;
-                const separationX = (overlap / 2) * cos;
-                const separationY = (overlap / 2) * sin;
+                    // Update velocities
+                    p1.vx = vx1Final * cos - vy1 * sin;
+                    p1.vy = vy1 * cos + vx1Final * sin;
+                    p2.vx = vx2Final * cos - vy2 * sin;
+                    p2.vy = vy2 * cos + vx2Final * sin;
 
-                p1.x -= separationX;
-                p1.y -= separationY;
-                p2.x += separationX;
-                p2.y += separationY;
+                    // Separate overlapping particles
+                    const overlap = 2 * PARTICLE_RADIUS - distance;
+                    if (overlap > 0) { // Prevent negative separation
+                        const separationX = (overlap / 2) * cos;
+                        const separationY = (overlap / 2) * sin;
 
-                // Increment collision count
-                totalCollisions += 1;
+                        p1.x -= separationX;
+                        p1.y -= separationY;
+                        p2.x += separationX;
+                        p2.y += separationY;
+
+                        // Increment collision count
+                        totalCollisions += 1;
+                    }
+                }
             }
         }
     }
@@ -218,8 +237,15 @@ function animate() {
 
 // Pressure Calculation
 setInterval(() => {
-    pressure = totalCollisions / (NUM_PARTICLES * (pressureUpdateInterval / 1000));
-    pressureDisplay.textContent = `Pressure: ${pressure.toFixed(2)} Collisions/sec`;
+    // Calculate collisions per particle
+    pressure = totalCollisions / NUM_PARTICLES;
+
+    // Ensure pressure is zero at or below absolute zero
+    if (temperatureKelvin <= 0) {
+        pressure = 0;
+    }
+
+    pressureDisplay.textContent = `Pressure: ${pressure.toFixed(2)} Collisions/Particle/sec`;
     totalCollisions = 0;
 }, pressureUpdateInterval);
 
@@ -253,7 +279,7 @@ temperatureInput.addEventListener('input', () => {
     // Update particle velocities based on new temperature
     particles.forEach(particle => {
         const angle = Math.atan2(particle.vy, particle.vx);
-        const scalingFactor = 1; // Adjust as needed for visual scaling
+        const scalingFactor = 0.1; // Adjusted for better scaling
         const stdDev = temperatureKelvin > 0 ? Math.sqrt(temperatureKelvin * scalingFactor) : 0;
         const speed = temperatureKelvin > 0 ? getRandomNormal(0, stdDev) : 0;
         particle.vx = speed * Math.cos(angle);
