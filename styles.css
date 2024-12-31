@@ -1,32 +1,117 @@
 /* styles.css */
 
+/* Reset default margins and paddings */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     background-color: #222;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     height: 100vh;
-    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #fff;
 }
 
+/* Control Panel Styling */
+#controlPanel {
+    background-color: #333;
+    padding: 20px;
+    border: 2px solid #fff;
+    border-radius: 10px;
+    margin: 20px;
+    width: 800px;
+}
+
+#controlPanel h2 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    flex: 1;
+}
+
+.control-group input[type="number"],
+.control-group input[type="range"] {
+    flex: 2;
+    padding: 5px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+#tempValue,
+#compressorHeightValue {
+    width: 30px;
+    text-align: center;
+    margin-left: 10px;
+}
+
+#applySettings {
+    width: 100%;
+    padding: 10px;
+    background-color: #00fffc;
+    color: #222;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#applySettings:hover {
+    background-color: #00e5e0;
+}
+
+/* Container Styling */
 #container {
     position: relative;
     border: 2px solid #fff;
     background-color: #333;
+    width: 800px;
+    height: 600px;
+    overflow: hidden;
 }
 
-canvas {
-    display: block;
-}
-
+/* Pressure Display Styling */
 #pressureDisplay {
     position: absolute;
     top: 10px;
     left: 10px;
-    color: #fff;
-    font-family: Arial, sans-serif;
     background: rgba(0, 0, 0, 0.5);
     padding: 5px 10px;
     border-radius: 5px;
+    z-index: 2;
+    font-size: 18px;
+}
+
+/* Compressor Styling */
+#compressor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100px; /* Default height */
+    background-color: #ff5722;
+    opacity: 0.7;
+    z-index: 1;
+    transition: height 0.3s ease;
+}
+
+/* Canvas Styling */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     z-index: 1;
 }

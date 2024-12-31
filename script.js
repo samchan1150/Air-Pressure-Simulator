@@ -1,17 +1,25 @@
 // script.js
 
-// Get Canvas and Context
+// Get Elements
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 const pressureDisplay = document.getElementById('pressureDisplay');
 
-const width = canvas.width;
-const height = canvas.height;
+const numParticlesInput = document.getElementById('numParticles');
+const temperatureInput = document.getElementById('temperature');
+const tempValueDisplay = document.getElementById('tempValue');
+const compressorHeightInput = document.getElementById('compressorHeight');
+const compressorHeightValueDisplay = document.getElementById('compressorHeightValue');
+const applySettingsButton = document.getElementById('applySettings');
+const compressor = document.getElementById('compressor');
+
+let width = canvas.width;
+let height = canvas.height;
 
 // Particle Settings
-const NUM_PARTICLES = 500;
-const PARTICLE_RADIUS = 2;
-const MAX_SPEED = 2;
+let NUM_PARTICLES = parseInt(numParticlesInput.value);
+let PARTICLE_RADIUS = 2;
+let MAX_SPEED = parseInt(temperatureInput.value);
 
 // Pressure Calculation
 let totalCollisions = 0;
@@ -42,21 +50,27 @@ class Particle {
         // Collision with walls
         let collided = false;
 
+        // Left Wall
         if (this.x <= PARTICLE_RADIUS) {
             this.x = PARTICLE_RADIUS;
             this.vx *= -1;
             collided = true;
-        } else if (this.x >= width - PARTICLE_RADIUS) {
+        }
+        // Right Wall
+        else if (this.x >= width - PARTICLE_RADIUS) {
             this.x = width - PARTICLE_RADIUS;
             this.vx *= -1;
             collided = true;
         }
 
-        if (this.y <= PARTICLE_RADIUS) {
-            this.y = PARTICLE_RADIUS;
+        // Top Wall (Compressor Boundary)
+        if (this.y <= compressorHeight) {
+            this.y = compressorHeight;
             this.vy *= -1;
             collided = true;
-        } else if (this.y >= height - PARTICLE_RADIUS) {
+        }
+        // Bottom Wall
+        else if (this.y >= height - PARTICLE_RADIUS) {
             this.y = height - PARTICLE_RADIUS;
             this.vy *= -1;
             collided = true;
@@ -76,32 +90,36 @@ class Particle {
 }
 
 // Initialize Particles
-const particles = [];
-for (let i = 0; i < NUM_PARTICLES; i++) {
-    let x, y;
-    let safe = false;
+let particles = [];
 
-    // Ensure particles are not initialized overlapping
-    while (!safe) {
-        x = Math.random() * (width - 2 * PARTICLE_RADIUS) + PARTICLE_RADIUS;
-        y = Math.random() * (height - 2 * PARTICLE_RADIUS) + PARTICLE_RADIUS;
-        safe = true;
+function initializeParticles() {
+    particles = [];
+    for (let i = 0; i < NUM_PARTICLES; i++) {
+        let x, y;
+        let safe = false;
 
-        for (let j = 0; j < particles.length; j++) {
-            const other = particles[j];
-            const distance = getDistance({x, y}, other);
-            if (distance < 2 * PARTICLE_RADIUS) {
-                safe = false;
-                break;
+        // Ensure particles are not initialized overlapping
+        while (!safe) {
+            x = Math.random() * (width - 2 * PARTICLE_RADIUS) + PARTICLE_RADIUS;
+            y = Math.random() * (height - 2 * PARTICLE_RADIUS) + compressorHeight;
+            safe = true;
+
+            for (let j = 0; j < particles.length; j++) {
+                const other = particles[j];
+                const distance = getDistance({x, y}, other);
+                if (distance < 2 * PARTICLE_RADIUS) {
+                    safe = false;
+                    break;
+                }
             }
         }
-    }
 
-    const angle = Math.random() * 2 * Math.PI;
-    const speed = Math.random() * MAX_SPEED;
-    const vx = Math.cos(angle) * speed;
-    const vy = Math.sin(angle) * speed;
-    particles.push(new Particle(x, y, vx, vy));
+        const angle = Math.random() * 2 * Math.PI;
+        const speed = Math.random() * MAX_SPEED;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        particles.push(new Particle(x, y, vx, vy));
+    }
 }
 
 // Handle Inter-Particle Collisions
@@ -185,5 +203,61 @@ setInterval(() => {
     totalCollisions = 0;
 }, pressureUpdateInterval);
 
-// Start Animation
+// Apply Settings Button Event Listener
+applySettingsButton.addEventListener('click', () => {
+    // Update Number of Particles
+    const newNum = parseInt(numParticlesInput.value);
+    if (newNum !== NUM_PARTICLES) {
+        NUM_PARTICLES = newNum;
+        initializeParticles();
+    }
+
+    // Update Temperature
+    const newTemp = parseInt(temperatureInput.value);
+    if (newTemp !== MAX_SPEED) {
+        MAX_SPEED = newTemp;
+        // Update particle velocities based on new temperature
+        particles.forEach(particle => {
+            const angle = Math.atan2(particle.vy, particle.vx);
+            const speed = Math.random() * MAX_SPEED;
+            particle.vx = Math.cos(angle) * speed;
+            particle.vy = Math.sin(angle) * speed;
+        });
+    }
+
+    // Update Compressor Height
+    const newHeight = parseInt(compressorHeightInput.value);
+    if (newHeight !== compressorHeight) {
+        compressorHeight = newHeight;
+        compressor.style.height = `${compressorHeight}px`;
+        // Adjust particle positions if they are above the new compressor height
+        particles.forEach(particle => {
+            if (particle.y < compressorHeight + PARTICLE_RADIUS) {
+                particle.y = compressorHeight + PARTICLE_RADIUS;
+                particle.vy *= -1;
+                totalCollisions += 1;
+            }
+        });
+    }
+});
+
+// Initialize Compressor Height Display
+let compressorHeight = parseInt(compressorHeightInput.value);
+compressorHeightValueDisplay.textContent = compressorHeight;
+
+compressorHeightInput.addEventListener('input', () => {
+    const currentHeight = parseInt(compressorHeightInput.value);
+    compressorHeightValueDisplay.textContent = currentHeight;
+});
+
+// Initialize Temperature Display
+tempValueDisplay.textContent = MAX_SPEED;
+
+temperatureInput.addEventListener('input', () => {
+    const currentTemp = parseInt(temperatureInput.value);
+    tempValueDisplay.textContent = currentTemp;
+});
+
+// Initialize Particles and Start Animation
+initializeParticles();
 animate();

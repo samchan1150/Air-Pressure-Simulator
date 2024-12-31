@@ -6,9 +6,33 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="controlPanel">
+        <h2>Simulator Controls</h2>
+        
+        <div class="control-group">
+            <label for="numParticles">Number of Particles:</label>
+            <input type="number" id="numParticles" value="500" min="100" max="1000">
+        </div>
+        
+        <div class="control-group">
+            <label for="temperature">Temperature:</label>
+            <input type="range" id="temperature" min="1" max="10" value="2">
+            <span id="tempValue">2</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="compressorHeight">Compressor Height:</label>
+            <input type="range" id="compressorHeight" min="50" max="300" value="100">
+            <span id="compressorHeightValue">100</span> px
+        </div>
+        
+        <button id="applySettings">Apply Settings</button>
+    </div>
+
     <div id="container">
         <div id="pressureDisplay">Pressure: 0</div>
         <canvas id="simulationCanvas" width="800" height="600"></canvas>
+        <div id="compressor"></div>
     </div>
 
     <script src="script.js"></script>
