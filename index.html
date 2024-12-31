@@ -11,26 +11,25 @@
         
         <div class="control-group">
             <label for="numParticles">Number of Particles:</label>
-            <input type="number" id="numParticles" value="500" min="100" max="1000">
+            <input type="number" id="numParticles" value="500" min="100" max="2500">
+            <button id="updateParticles">Update Particles</button>
         </div>
         
         <div class="control-group">
-            <label for="temperature">Temperature:</label>
-            <input type="range" id="temperature" min="1" max="10" value="2">
-            <span id="tempValue">2</span>
+            <label for="temperature">Temperature (°C):</label>
+            <input type="range" id="temperature" min="-273.15" max="500" step="0.01" value="273.15">
+            <span id="tempValue">273.15°C</span>
         </div>
         
         <div class="control-group">
             <label for="compressorHeight">Compressor Height:</label>
-            <input type="range" id="compressorHeight" min="50" max="300" value="100">
-            <span id="compressorHeightValue">100</span> px
+            <input type="range" id="compressorHeight" min="50" max="300" step="1" value="100">
+            <span id="compressorHeightValue">100 px</span>
         </div>
-        
-        <button id="applySettings">Apply Settings</button>
     </div>
 
     <div id="container">
-        <div id="pressureDisplay">Pressure: 0</div>
+        <div id="pressureDisplay">Pressure: 0 Collisions/sec</div>
         <canvas id="simulationCanvas" width="800" height="600"></canvas>
         <div id="compressor"></div>
     </div>

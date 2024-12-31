@@ -15,6 +15,7 @@ body {
     height: 100vh;
     font-family: Arial, sans-serif;
     color: #fff;
+    overflow: hidden;
 }
 
 /* Control Panel Styling */
@@ -42,35 +43,45 @@ body {
     flex: 1;
 }
 
+.control-group input[type="number"] {
+    padding: 5px;
+}
+
 .control-group input[type="number"],
 .control-group input[type="range"] {
     flex: 2;
-    padding: 5px;
     margin-left: 10px;
     border: none;
     border-radius: 5px;
+    background-color: #555;
+    color: #fff;
 }
 
-#tempValue,
-#compressorHeightValue {
-    width: 30px;
-    text-align: center;
+.control-group button {
+    flex: 0.5;
+    padding: 5px 10px;
     margin-left: 10px;
-}
-
-#applySettings {
-    width: 100%;
-    padding: 10px;
     background-color: #00fffc;
     color: #222;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    transition: background-color 0.3s ease;
 }
 
-#applySettings:hover {
+.control-group button:hover {
     background-color: #00e5e0;
+}
+
+#tempValue,
+#compressorHeightValue {
+    width: 80px;
+    text-align: center;
+    margin-left: 10px;
+}
+
+#compressorHeightValue {
+    width: 60px;
 }
 
 /* Container Styling */

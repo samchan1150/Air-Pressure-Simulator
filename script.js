@@ -10,16 +10,19 @@ const temperatureInput = document.getElementById('temperature');
 const tempValueDisplay = document.getElementById('tempValue');
 const compressorHeightInput = document.getElementById('compressorHeight');
 const compressorHeightValueDisplay = document.getElementById('compressorHeightValue');
-const applySettingsButton = document.getElementById('applySettings');
+const updateParticlesButton = document.getElementById('updateParticles');
 const compressor = document.getElementById('compressor');
 
 let width = canvas.width;
 let height = canvas.height;
 
 // Particle Settings
-let NUM_PARTICLES = parseInt(numParticlesInput.value);
+let NUM_PARTICLES = parseInt(numParticlesInput.value) || 500;
 let PARTICLE_RADIUS = 2;
-let MAX_SPEED = parseInt(temperatureInput.value);
+
+// Temperature Settings
+let temperatureCelsius = parseFloat(temperatureInput.value) || 273.15; // Default 273.15°C
+let temperatureKelvin = temperatureCelsius + 273.15;
 
 // Pressure Calculation
 let totalCollisions = 0;
@@ -31,6 +34,14 @@ function getDistance(p1, p2) {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Function to Generate Gaussian Random Numbers using Box-Muller Transform
+function getRandomNormal(mean = 0, stdDev = 1) {
+    let u1 = Math.random();
+    let u2 = Math.random();
+    let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+    return z0 * stdDev + mean;
 }
 
 // Particle Class
@@ -64,8 +75,8 @@ class Particle {
         }
 
         // Top Wall (Compressor Boundary)
-        if (this.y <= compressorHeight) {
-            this.y = compressorHeight;
+        if (this.y <= compressorHeight + PARTICLE_RADIUS) {
+            this.y = compressorHeight + PARTICLE_RADIUS;
             this.vy *= -1;
             collided = true;
         }
@@ -101,7 +112,7 @@ function initializeParticles() {
         // Ensure particles are not initialized overlapping
         while (!safe) {
             x = Math.random() * (width - 2 * PARTICLE_RADIUS) + PARTICLE_RADIUS;
-            y = Math.random() * (height - 2 * PARTICLE_RADIUS) + compressorHeight;
+            y = Math.random() * (height - 2 * PARTICLE_RADIUS - compressorHeight) + compressorHeight + PARTICLE_RADIUS;
             safe = true;
 
             for (let j = 0; j < particles.length; j++) {
@@ -114,10 +125,19 @@ function initializeParticles() {
             }
         }
 
-        const angle = Math.random() * 2 * Math.PI;
-        const speed = Math.random() * MAX_SPEED;
-        const vx = Math.cos(angle) * speed;
-        const vy = Math.sin(angle) * speed;
+        // Convert temperature from Celsius to Kelvin
+        temperatureKelvin = temperatureCelsius + 273.15;
+
+        // Calculate standard deviation based on temperature
+        // Using (1/2)m*v^2 = (1/2)k*T => v = sqrt(k*T/m)
+        // For simulation purposes, set k/m = scaling factor
+        const scalingFactor = 1; // Adjust as needed for visual scaling
+        const stdDev = temperatureKelvin > 0 ? Math.sqrt(temperatureKelvin * scalingFactor) : 0;
+
+        // Generate velocities based on Maxwell-Boltzmann distribution
+        const vx = temperatureKelvin > 0 ? getRandomNormal(0, stdDev) : 0;
+        const vy = temperatureKelvin > 0 ? getRandomNormal(0, stdDev) : 0;
+
         particles.push(new Particle(x, y, vx, vy));
     }
 }
@@ -199,64 +219,72 @@ function animate() {
 // Pressure Calculation
 setInterval(() => {
     pressure = totalCollisions / (NUM_PARTICLES * (pressureUpdateInterval / 1000));
-    pressureDisplay.textContent = `Pressure: ${pressure.toFixed(2)} collisions/sec`;
+    pressureDisplay.textContent = `Pressure: ${pressure.toFixed(2)} Collisions/sec`;
     totalCollisions = 0;
 }, pressureUpdateInterval);
 
-// Apply Settings Button Event Listener
-applySettingsButton.addEventListener('click', () => {
+// Update Particles Button Event Listener
+updateParticlesButton.addEventListener('click', () => {
     // Update Number of Particles
-    const newNum = parseInt(numParticlesInput.value);
+    let newNum = parseInt(numParticlesInput.value);
+    if (isNaN(newNum) || newNum < 100) {
+        newNum = 100;
+        numParticlesInput.value = 100;
+    } else if (newNum > 2500) {
+        newNum = 2500;
+        numParticlesInput.value = 2500;
+    }
+
     if (newNum !== NUM_PARTICLES) {
         NUM_PARTICLES = newNum;
         initializeParticles();
     }
+});
 
-    // Update Temperature
-    const newTemp = parseInt(temperatureInput.value);
-    if (newTemp !== MAX_SPEED) {
-        MAX_SPEED = newTemp;
-        // Update particle velocities based on new temperature
-        particles.forEach(particle => {
-            const angle = Math.atan2(particle.vy, particle.vx);
-            const speed = Math.random() * MAX_SPEED;
-            particle.vx = Math.cos(angle) * speed;
-            particle.vy = Math.sin(angle) * speed;
-        });
-    }
+// Temperature Input Event Listener (Dynamic Update)
+temperatureInput.addEventListener('input', () => {
+    const newTempCelsius = parseFloat(temperatureInput.value);
+    temperatureCelsius = isNaN(newTempCelsius) ? temperatureCelsius : newTempCelsius;
+    temperatureKelvin = temperatureCelsius + 273.15;
 
-    // Update Compressor Height
+    // Update Temperature Display
+    tempValueDisplay.textContent = `${temperatureCelsius.toFixed(2)}°C`;
+
+    // Update particle velocities based on new temperature
+    particles.forEach(particle => {
+        const angle = Math.atan2(particle.vy, particle.vx);
+        const scalingFactor = 1; // Adjust as needed for visual scaling
+        const stdDev = temperatureKelvin > 0 ? Math.sqrt(temperatureKelvin * scalingFactor) : 0;
+        const speed = temperatureKelvin > 0 ? getRandomNormal(0, stdDev) : 0;
+        particle.vx = speed * Math.cos(angle);
+        particle.vy = speed * Math.sin(angle);
+    });
+});
+
+// Compressor Height Input Event Listener (Dynamic Update)
+compressorHeightInput.addEventListener('input', () => {
     const newHeight = parseInt(compressorHeightInput.value);
-    if (newHeight !== compressorHeight) {
-        compressorHeight = newHeight;
-        compressor.style.height = `${compressorHeight}px`;
-        // Adjust particle positions if they are above the new compressor height
-        particles.forEach(particle => {
-            if (particle.y < compressorHeight + PARTICLE_RADIUS) {
-                particle.y = compressorHeight + PARTICLE_RADIUS;
-                particle.vy *= -1;
-                totalCollisions += 1;
-            }
-        });
-    }
+    compressorHeight = isNaN(newHeight) ? compressorHeight : newHeight;
+    compressorHeightValueDisplay.textContent = `${compressorHeight} px`;
+    compressor.style.height = `${compressorHeight}px`;
+
+    // Adjust particle positions if they are above the new compressor height
+    particles.forEach(particle => {
+        if (particle.y < compressorHeight + PARTICLE_RADIUS) {
+            particle.y = compressorHeight + PARTICLE_RADIUS;
+            particle.vy *= -1;
+            totalCollisions += 1;
+        }
+    });
 });
 
 // Initialize Compressor Height Display
-let compressorHeight = parseInt(compressorHeightInput.value);
-compressorHeightValueDisplay.textContent = compressorHeight;
-
-compressorHeightInput.addEventListener('input', () => {
-    const currentHeight = parseInt(compressorHeightInput.value);
-    compressorHeightValueDisplay.textContent = currentHeight;
-});
+let compressorHeight = parseInt(compressorHeightInput.value) || 100;
+compressorHeightValueDisplay.textContent = `${compressorHeight} px`;
 
 // Initialize Temperature Display
-tempValueDisplay.textContent = MAX_SPEED;
-
-temperatureInput.addEventListener('input', () => {
-    const currentTemp = parseInt(temperatureInput.value);
-    tempValueDisplay.textContent = currentTemp;
-});
+temperatureKelvin = temperatureCelsius + 273.15;
+tempValueDisplay.textContent = `${temperatureCelsius.toFixed(2)}°C`;
 
 // Initialize Particles and Start Animation
 initializeParticles();
