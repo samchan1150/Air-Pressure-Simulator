@@ -21,7 +21,7 @@ let NUM_PARTICLES = parseInt(numParticlesInput.value) || 500;
 let PARTICLE_RADIUS = 2;
 
 // Temperature Settings
-let temperatureCelsius = parseFloat(temperatureInput.value) || -273.15; // Default -273.15°C
+let temperatureCelsius = parseFloat(temperatureInput.value) || 0; // Default -273.15°C
 let temperatureKelvin = temperatureCelsius + 273.15;
 
 // Pressure Calculation
