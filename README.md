@@ -38,10 +38,6 @@ The simulator models air particles moving within a rectangular container, repres
 - **Function**: Continuously monitors and displays the current air pressure based on collision rates.
 - **Calculation**: Pressure is calculated as the number of particle collisions per second, normalized per particle to provide an accurate and scalable measure of air pressure.
 
-### Performance Monitoring
-
-- **FPS Chart**: An integrated Frames Per Second (FPS) chart tracks the simulator's performance, ensuring smooth animations and interactions, especially as the number of particles increases.
-
 ## Interactive Controls
 
 - **Number of Particles**: Input field accompanied by an Update Particles button allows you to set and apply the desired particle count (ranging from 100 to 2500). Adjusting this parameter lets you observe how gas density affects pressure.
