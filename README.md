@@ -2,6 +2,12 @@
 
 Welcome to the Air Pressure Simulator, an interactive tool designed to visualize and explore the fundamental principles of air pressure and gas behavior. Whether you're a student, educator, or enthusiast, this simulator offers a hands-on experience to understand how various factors influence air pressure within a confined space.
 
+By manipulating the number of particles, temperature, and compressor height, users can gain intuitive insights into how these factors interplay to influence air pressure. Observing the changes in the Pressure Display and particle behavior offers a tangible understanding of concepts such as:
+
+- **Kinetic Theory of Gases**: Demonstrates how particle motion and collisions contribute to pressure.
+- **Compression and Volume**: Illustrates the relationship between gas compression (reducing volume) and increased pressure.
+- **Temperature Effects**: Shows how thermal energy impacts particle speeds and collision frequencies, affecting pressure.
+
 ## How It Works
 
 The simulator models air particles moving within a rectangular container, representing a simplified gas system. Here's a breakdown of the key components and how they interact to demonstrate air pressure:
@@ -48,10 +54,6 @@ The simulator models air particles moving within a rectangular container, repres
 - **Compressor**: A highlighted section within the container adjusts its height based on user input, acting as a dynamic boundary that compresses the gas.
 - **Particles**: Colored circles represent individual air molecules, moving and interacting based on the current simulation parameters.
 
-## Educational Insights
 
-By manipulating the number of particles, temperature, and compressor height, users can gain intuitive insights into how these factors interplay to influence air pressure. Observing the changes in the Pressure Display and particle behavior offers a tangible understanding of concepts such as:
 
-- **Kinetic Theory of Gases**: Demonstrates how particle motion and collisions contribute to pressure.
-- **Compression and Volume**: Illustrates the relationship between gas compression (reducing volume) and increased pressure.
-- **Temperature Effects**: Shows how thermal energy impacts particle speeds and collision frequencies, affecting pressure.
+
